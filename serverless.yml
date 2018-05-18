@@ -1,0 +1,32 @@
+service: pipeline-hook
+
+provider:
+  name: aws
+  runtime: python3.6
+  memorySize: 128
+  stage: production
+  region: ap-southeast-2
+  iamManagedPolicies:
+    - 'arn:aws:iam::aws:policy/AWSCodePipelineApproverAccess'
+  environment:
+    SLACK_WEBHOOK_URL: ${ssm:/pipeline-hook/SLACK_WEBHOOK_URL}
+    FAVICON_URL: ${ssm:/pipeline-hook/FAVICON_URL}
+    PIPELINE_NAME: ${ssm:/pipeline-hook/PIPELINE_NAME}
+    APP_NAME: ${ssm:/pipeline-hook/APP_NAME}
+
+functions:
+  listener:
+    handler: hook.listen
+    events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - 'aws.codepipeline'
+            detail-type:
+              - 'CodePipeline Action Execution State Change'
+            detail:
+              pipeline:
+                - ${ssm:/pipeline-hook/PIPELINE_NAME}
+              state:
+                - SUCCEEDED
+                - FAILED
