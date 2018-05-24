@@ -30,3 +30,21 @@ functions:
               state:
                 - SUCCEEDED
                 - FAILED
+
+  reviewer:
+    handler: review.listen
+    events:
+      - cloudwatchEvent:
+          event:
+            source:
+              - 'aws.codepipeline'
+            detail-type:
+              - 'CodePipeline Action Execution State Change'
+            detail:
+              pipeline:
+                - ${ssm:/pipeline-hook/PIPELINE_NAME}
+              state:
+                - STARTED
+              type:
+                category:
+                  - Approval
