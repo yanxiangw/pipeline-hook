@@ -18,3 +18,31 @@ def send(json_string):
         headers={"content-type": "application/json"})
     response = urllib.request.urlopen(req)
     return f"Response from Slack: {response.read().decode('utf8')}"
+
+def find_current(steps):
+    current_steps = [step for step in steps if step["latestExecution"]["status"] == "InProgress"]
+    return current_steps[0] if current_steps else None
+
+def get_pipeline_state():
+    client = boto3.client("codepipeline")
+    response = client.get_pipeline_state(name=os.environ["PIPELINE_NAME"])
+    current_stage = find_current(response["stageStates"])
+    current_action = find_current(current_stage["actionStates"])
+    return current_stage["stageName"], current_action["actionName"], current_action["latestExecution"]["token"]
+
+def resolve(payload):
+    client = boto3.client("codepipeline")
+    response = payload["actions"][0]["value"]
+    user = payload["user"]["name"]
+    stage, action, token = get_pipeline_state()
+    client.put_approval_result(
+        pipelineName=os.environ["PIPELINE_NAME"],
+        stageName=stage,
+        actionName=action,
+        result={
+            'summary': f"{response} through Slack by {user}",
+            'status': response
+        },
+        token=token
+    )
+    return 200, f"{response} by @{user}"

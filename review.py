@@ -46,3 +46,8 @@ def listen(event, context):
     print(f"Receive event: {event}")
     status, body = prompt(event)
     return { "statusCode": status, "body": body }
+
+def respond(event, context):
+    payload = json.loads(parse_qs(event['body'])['payload'][0])
+    status, body = util.resolve(payload)
+    return { "statusCode": status, "body": body }

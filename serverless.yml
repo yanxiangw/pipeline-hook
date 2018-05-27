@@ -48,3 +48,10 @@ functions:
               type:
                 category:
                   - Approval
+
+  approver:
+    handler: review.respond
+    events:
+      - http:
+          path: releases/approval
+          method: post
