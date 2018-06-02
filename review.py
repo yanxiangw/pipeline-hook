@@ -1,53 +1,21 @@
 import os
 import json
 from urllib.parse import parse_qs
-import util
+from pipeline import Pipeline
+from slack import Slack
 
-def prompt(event):
-    action = event["detail"]["action"]
-    stage = event["detail"]["stage"]
-    json_message = {
-        "attachments": [
-            {
-                "pretext": f"Manual approval for AWS CodePipline {os.environ['PIPELINE_NAME']}",
-                "title": f"{action} on {stage}",
-                "color": "warning",
-                "fields": [
-                    {
-                        "title": "Version",
-                        "value": util.get_version(event["detail"]["execution-id"])
-                    }
-                ],
-                "callback_id": "release_approval",
-                "actions": [
-                    {
-                        "name": "action",
-                        "text": "Approve",
-                        "type": "button",
-                        "value": "Approved",
-                        "style": "primary"
-                    },
-                    {
-                        "name": "action",
-                        "text": "Reject",
-                        "type": "button",
-                        "value": "Rejected",
-                        "style": "danger"
-                    }
-                ],
-                "footer": os.environ["APP_NAME"],
-                "footer_icon": os.environ["FAVICON_URL"]
-            }
-        ]
-    }
-    return 200, util.send(json_message)
+def process(detail):
+  slack = Slack(os.environ["APP_NAME"], os.environ["FAVICON_URL"])
+  pipeline = Pipeline(os.environ['PIPELINE_NAME'])
+  message = slack.build_prompt(pipeline.revision(detail["execution-id"]), os.environ['PIPELINE_NAME'], detail)
+  return slack.send(os.environ["SLACK_WEBHOOK_URL"], message)
 
 def listen(event, context):
-    print(f"Receive event: {event}")
-    status, body = prompt(event)
-    return { "statusCode": status, "body": body }
+  body = process(event["detail"])
+  return { "statusCode": 200, "body": body }
 
 def respond(event, context):
-    payload = json.loads(parse_qs(event['body'])['payload'][0])
-    status, body = util.resolve(payload)
-    return { "statusCode": status, "body": body }
+  pipeline = Pipeline(os.environ['PIPELINE_NAME'])
+  payload = json.loads(parse_qs(event['body'])['payload'][0])
+  status, body = pipeline.approve(payload["user"]["name"], payload["actions"][0]["value"])
+  return { "statusCode": status, "body": body }
