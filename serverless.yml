@@ -16,7 +16,7 @@ provider:
 
 functions:
   listener:
-    handler: hook.listen
+    handler: handler.listen
     events:
       - cloudwatchEvent:
           event:
@@ -32,7 +32,7 @@ functions:
                 - FAILED
 
   reviewer:
-    handler: review.listen
+    handler: handler.review
     events:
       - cloudwatchEvent:
           event:
@@ -50,7 +50,7 @@ functions:
                   - Approval
 
   approver:
-    handler: review.respond
+    handler: handler.approve
     events:
       - http:
           path: releases/approval
