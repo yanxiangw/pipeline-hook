@@ -17,6 +17,8 @@ provider:
 functions:
   listener:
     handler: handler.listen
+    environment:
+      FILTER_STAGES: ${ssm:/pipeline-hook/FILTER_STAGES}
     events:
       - cloudwatchEvent:
           event:

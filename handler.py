@@ -10,7 +10,7 @@ pipeline = Pipeline(os.environ['PIPELINE_NAME'])
 webhook_url = os.environ["SLACK_WEBHOOK_URL"]
 
 def is_relavant(detail):
-  return detail["state"] == "FAILED" or detail["stage"] in ["Production", "Staging"]
+  return detail["state"] == "FAILED" or detail["stage"] in os.environ["FILTER_STAGES"].split(',')
 
 def listen(event, context):
   detail = event["detail"]
