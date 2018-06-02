@@ -1,6 +1,6 @@
 import os
-from pipeline import Pipeline
-from slack import Slack
+from lib.pipeline import Pipeline
+from lib.slack import Slack
 
 def is_relavant(detail):
   return detail["state"] == "FAILED" or detail["stage"] in ["Production", "Staging"]

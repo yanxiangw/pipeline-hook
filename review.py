@@ -1,8 +1,8 @@
 import os
 import json
 from urllib.parse import parse_qs
-from pipeline import Pipeline
-from slack import Slack
+from lib.pipeline import Pipeline
+from lib.slack import Slack
 
 def process(detail):
   slack = Slack(os.environ["APP_NAME"], os.environ["FAVICON_URL"])
